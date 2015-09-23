@@ -5,7 +5,6 @@ import logging
 import pandas
 import mintlabs
 import os
-import threading
 
 DESCRIPTION = "Upload subjects data & metadata to the mintlabs platform."
 
@@ -52,11 +51,9 @@ def upload_subjects_data(project, dataframe, basedir, data_type):
         data_file = os.path.join(basedir, dataframe['File'][index])
         subject = project.get_subject(subject_name)
         if data_type == 'gametection':
-            target = subject.upload_gametection
+            subject.upload_gametection(data_file)
         else:
-            target = subject.upload_mri
-        thread = threading.Thread(target=target, args=(data_file,))
-        thread.start()
+            subject.upload_mri(data_file)
         LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
 
 def main(options):
