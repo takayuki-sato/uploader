@@ -5,6 +5,7 @@ import logging
 import pandas
 import mintlabs
 import os
+import threading
 
 DESCRIPTION = "Upload subjects data & metadata to the mintlabs platform."
 
@@ -44,14 +45,19 @@ def add_subjects(project, dataframe):
         subject.parameters = param_dict
         LOGGER.info('Updated subject metadata: {}'.format(subject_name))
 
-def upload_subject_data(project, dataframe, basedir):
+def upload_subjects_data(project, dataframe, basedir, data_type):
     parameters = dataframe.columns[2:]
     for index in range(1, dataframe.shape[0]):
         subject_name = dataframe['Subject'][index]
         data_file = os.path.join(basedir, dataframe['File'][index])
         subject = project.get_subject(subject_name)
-        subject.upload_mri(data_file)
-        LOGGER.info('Data uploaded for subject {}: {}'.format(subject_name, data_file))
+        if data_type == 'gametection':
+            target = subject.upload_gametection
+        else:
+            target = subject.upload_mri
+        thread = threading.Thread(target=target, args=(data_file,))
+        thread.start()
+        LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
 
 def main(options):
     if not options.user:
@@ -75,9 +81,9 @@ def main(options):
     # if there is a column called gender, rename it to be lowercase
     df.columns = [col.lower() if col.lower() == 'gender' else col for col in df.columns]
     ### Add parameters ###
-    add_metadata_parameters(project, df)
-    add_subjects(project, df)
-    upload_subject_data(project, df, options.basedir)
+    # add_metadata_parameters(project, df)
+    # add_subjects(project, df)
+    upload_subjects_data(project, df, options.basedir, options.data_type)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -101,6 +107,10 @@ if __name__ == '__main__':
                         dest='project',
                         action='store',
                         default=None)
+    parser.add_argument('-t', '--type',
+                        dest='data_type',
+                        action='store',
+                        default='mri')
 
     options = parser.parse_args()
     main(options)
