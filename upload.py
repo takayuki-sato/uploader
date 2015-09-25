@@ -81,8 +81,8 @@ def main(options):
     # if there is a column called gender, rename it to be lowercase
     df.columns = [col.lower() if col.lower() == 'gender' else col for col in df.columns]
     ### Add parameters ###
-    # add_metadata_parameters(project, df)
-    # add_subjects(project, df)
+    add_metadata_parameters(project, df)
+    add_subjects(project, df)
     upload_subjects_data(project, df, options.basedir, options.data_type)
 
 if __name__ == '__main__':
