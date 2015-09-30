@@ -77,7 +77,7 @@ def upload_subjects_data(project, dataframe, basedir, data_type, n):
         subject_name = dataframe['Subject'][index]
         data_file = os.path.join(basedir, dataframe['File'][index])
         subject = project.get_subject(subject_name)
-        data = {"name": subject_name, "file": data_file, "subject": subject}
+        data = {"subject_name": subject_name, "file": data_file, "subject": subject}
         q.put(data)
     # start n workers
     start_n_workers(5, q, data)
