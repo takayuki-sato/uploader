@@ -33,13 +33,15 @@ def add_metadata_parameters(project, dataframe):
 
 def add_subjects(project, dataframe):
     parameters = dataframe.columns[2:]
+    existing_subjects = project.subjects
     for index in range(1, dataframe.shape[0]):
         subject_name = dataframe['Subject'][index]
-        subject = mintlabs.Subject(subject_name)
-        if not project.add_subject(subject):
+        if subject_name in existing_subjects:
             subject = project.get_subject(subject_name)
             LOGGER.info('Retrieved existing subject: {}'.format(subject_name))
         else:
+            subject = mintlabs.Subject(subject_name)
+            project.add_subject(subject)
             LOGGER.info('Added subject: {}'.format(subject_name))
         # fill dictionary with the subject metadata
         param_dict = subject.parameters
@@ -48,12 +50,13 @@ def add_subjects(project, dataframe):
         subject.parameters = param_dict
         LOGGER.info('Updated subject metadata: {}'.format(subject_name))
 
-def worker(q, data_type):
+def worker(q, data, data_type):
     while True:
         data = q.get()
         subject_name = data["subject_name"]
         data_file = data["file"]
         subject = data["subject"]
+        print(data_type)
         if data_type == "gametection":
             target = subject.upload_gametection
         else:
@@ -80,7 +83,7 @@ def upload_subjects_data(project, dataframe, basedir, data_type, n):
         data = {"subject_name": subject_name, "file": data_file, "subject": subject}
         q.put(data)
     # start n workers
-    start_n_workers(5, q, data)
+    start_n_workers(5, q, data, data_type)
     q.join()
 
 
@@ -106,8 +109,8 @@ def main(options):
     # if there is a column called gender, rename it to be lowercase
     df.columns = [col.lower() if col.lower() == 'gender' else col for col in df.columns]
     ### Add parameters ###
-    add_metadata_parameters(project, df)
-    add_subjects(project, df)
+    # add_metadata_parameters(project, df)
+    # add_subjects(project, df)
     upload_subjects_data(project, df, options.basedir, options.data_type, int(options.n_threads))
 
 if __name__ == '__main__':
