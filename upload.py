@@ -38,7 +38,9 @@ def add_subjects(project, dataframe):
         subject = mintlabs.Subject(subject_name)
         if not project.add_subject(subject):
             subject = project.get_subject(subject_name)
-        LOGGER.info('Added subject: {}'.format(subject_name))
+            LOGGER.info('Retrieved existing subject: {}'.format(subject_name))
+        else:
+            LOGGER.info('Added subject: {}'.format(subject_name))
         # fill dictionary with the subject metadata
         param_dict = subject.parameters
         for parameter in parameters:
