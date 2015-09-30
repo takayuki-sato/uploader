@@ -1,7 +1,7 @@
 # uploader
 Easily automate subject creatin and data uploads to the Mint Labs platform.
 
-# How to
+# Basic how to
 
 ```bash
 python3 upload.py --user "mintuser" --password "mintpassword" --project "project" --info "file.csv" --dir "data/"
@@ -31,3 +31,13 @@ The second row is used to define the type of the metadata parameters. These can 
 -   "decimal"
 
 The actual data is contained from rows 3 to the end of the file.
+
+# Threaded upload
+By default the upload is done using 5 threads (ie. 5 files are uploaded at the same time). This can be modified
+with the argument -n or --threads, indicating the number of threads (ie the number of simultaneous uploads).
+Eg.
+```bash
+python3 upload.py --user "mintuser" --password "mintpassword" --project "project" --info "file.csv" --dir "data/" --threads 10
+```
+
+will upload 10 files at the same time

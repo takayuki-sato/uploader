@@ -6,6 +6,7 @@ import pandas
 import mintlabs
 import os
 import threading
+import Queue
 
 DESCRIPTION = "Upload subjects data & metadata to the mintlabs platform."
 
@@ -45,19 +46,41 @@ def add_subjects(project, dataframe):
         subject.parameters = param_dict
         LOGGER.info('Updated subject metadata: {}'.format(subject_name))
 
-def upload_subjects_data(project, dataframe, basedir, data_type):
+def worker(queue, data_type):
+    while True:
+        data = queue.get()
+        subject_name = data["subject_name"]
+        data_file = data["file"]
+        subject = data["subject"]
+        if data_type == "gametection":
+            target = subject.upload_gametection
+        else:
+            target = subject.upload_mri
+        LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
+        target(data_file)
+        LOGGER.info('Finished upload for subject {}: {}'.format(subject_name, data_file))
+        queue.task_done()
+
+def start_n_workers(n, *args):
+    for i in range(n):
+        t = threading.Thread(target=worker, args=args)
+        t.daemon = True
+        t.start()
+
+def upload_subjects_data(project, dataframe, basedir, data_type, n):
     parameters = dataframe.columns[2:]
+    queue = Queue.queue()
+    # fill queue with all the tasks
     for index in range(1, dataframe.shape[0]):
         subject_name = dataframe['Subject'][index]
         data_file = os.path.join(basedir, dataframe['File'][index])
         subject = project.get_subject(subject_name)
-        if data_type == 'gametection':
-            target = subject.upload_gametection
-        else:
-            target = subject.upload_mri
-        thread = threading.Thread(target=target, args=(data_file,))
-        thread.start()
-        LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
+        data = {"name": subject_name, "file": data_file, "subject": subject}
+        queue.put(data)
+    # start n workers
+    start_n_workers(5, queue, data)
+    queue.join()
+
 
 def main(options):
     if not options.user:
@@ -83,7 +106,7 @@ def main(options):
     ### Add parameters ###
     add_metadata_parameters(project, df)
     add_subjects(project, df)
-    upload_subjects_data(project, df, options.basedir, options.data_type)
+    upload_subjects_data(project, df, options.basedir, options.data_type, int(options.n_threads))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -111,6 +134,11 @@ if __name__ == '__main__':
                         dest='data_type',
                         action='store',
                         default='mri')
+    parser.add_argument('-n', '--threads',
+                        dest='n_threads',
+                        action='store',
+                        default='5')
+
 
     options = parser.parse_args()
     main(options)
