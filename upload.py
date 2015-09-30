@@ -6,7 +6,7 @@ import pandas
 import mintlabs
 import os
 import threading
-import Queue
+import queue
 
 DESCRIPTION = "Upload subjects data & metadata to the mintlabs platform."
 
@@ -46,9 +46,9 @@ def add_subjects(project, dataframe):
         subject.parameters = param_dict
         LOGGER.info('Updated subject metadata: {}'.format(subject_name))
 
-def worker(queue, data_type):
+def worker(q, data_type):
     while True:
-        data = queue.get()
+        data = q.get()
         subject_name = data["subject_name"]
         data_file = data["file"]
         subject = data["subject"]
@@ -59,7 +59,7 @@ def worker(queue, data_type):
         LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
         target(data_file)
         LOGGER.info('Finished upload for subject {}: {}'.format(subject_name, data_file))
-        queue.task_done()
+        q.task_done()
 
 def start_n_workers(n, *args):
     for i in range(n):
@@ -69,17 +69,17 @@ def start_n_workers(n, *args):
 
 def upload_subjects_data(project, dataframe, basedir, data_type, n):
     parameters = dataframe.columns[2:]
-    queue = Queue.queue()
+    q = queue.Queue()
     # fill queue with all the tasks
     for index in range(1, dataframe.shape[0]):
         subject_name = dataframe['Subject'][index]
         data_file = os.path.join(basedir, dataframe['File'][index])
         subject = project.get_subject(subject_name)
         data = {"name": subject_name, "file": data_file, "subject": subject}
-        queue.put(data)
+        q.put(data)
     # start n workers
-    start_n_workers(5, queue, data)
-    queue.join()
+    start_n_workers(5, q, data)
+    q.join()
 
 
 def main(options):
