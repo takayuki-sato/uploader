@@ -56,7 +56,6 @@ def worker(q, data, data_type):
         subject_name = data["subject_name"]
         data_file = data["file"]
         subject = data["subject"]
-        print(data_type)
         if data_type == "gametection":
             target = subject.upload_gametection
         else:
