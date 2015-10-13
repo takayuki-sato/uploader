@@ -50,7 +50,7 @@ def add_subjects(project, dataframe):
         subject.parameters = param_dict
         LOGGER.info('Updated subject metadata: {}'.format(subject_name))
 
-def worker(q, data, data_type):
+def worker(q, data_type):
     while True:
         data = q.get()
         subject_name = data["subject_name"]
@@ -82,7 +82,7 @@ def upload_subjects_data(project, dataframe, basedir, data_type, n):
         data = {"subject_name": subject_name, "file": data_file, "subject": subject}
         q.put(data)
     # start n workers
-    start_n_workers(5, q, data, data_type)
+    start_n_workers(5, q, data_type)
     q.join()
 
 
