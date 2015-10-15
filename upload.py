@@ -74,7 +74,6 @@ def worker(q, data_type):
 def start_n_workers(n, *args):
     for i in range(n):
         t = threading.Thread(target=worker, args=args)
-        t.daemon = True
         t.start()
 
 def upload_subjects_data(project, dataframe, basedir, data_type, n):
