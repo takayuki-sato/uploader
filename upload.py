@@ -89,7 +89,7 @@ def upload_subjects_data(project, dataframe, basedir, data_type, n):
         data = {"subject_name": subject_name, "file": data_file, "subject": subject}
         q.put(data)
     # start n workers
-    start_n_workers(5, q, data_type)
+    start_n_workers(n, q, data_type)
     q.join()
 
 
