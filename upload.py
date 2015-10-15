@@ -60,6 +60,12 @@ def worker(q, data_type):
             target = subject.upload_gametection
         else:
             target = subject.upload_mri
+        # check that zip is fine before trying to upload
+        with zipfile.ZipFile(data_file, 'r') as myzip:
+            if myzip.testzip():
+                LOGGER.error('Skipping upload for subject {}: {}, zip is\
+                             corrupted.'.format(subject_name, data_file))
+                continue
         LOGGER.info('Uploading data for subject {}: {}'.format(subject_name, data_file))
         target(data_file)
         LOGGER.info('Finished upload for subject {}: {}'.format(subject_name, data_file))
