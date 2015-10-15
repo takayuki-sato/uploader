@@ -7,6 +7,7 @@ import mintlabs
 import os
 import threading
 import queue
+import zipfile
 
 DESCRIPTION = "Upload subjects data & metadata to the mintlabs platform."
 
